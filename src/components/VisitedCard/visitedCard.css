@@ -1,0 +1,40 @@
+.card{
+    width: 120.75px;
+    height: 31.5px;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.card:hover{
+    background-color: rgba(32, 33, 36, 0.1);
+}
+
+
+.img{
+   min-width: 31.5px;
+   min-height: 31.5px; 
+   max-width: 31.5px;
+   max-height: 31.5px; 
+   display: flex;
+   justify-content: center;
+    align-items: center;
+    border-radius: 31.5px;
+    background-size: cover;
+}
+
+.link{
+    width: 100%;
+    height: calc (112px - 76px);
+    display: flex;
+    justify-content:left;
+    align-items: center;
+    margin-left: 5px;
+}
+
+.string{
+    text-decoration: none;
+    color: #000;
+}

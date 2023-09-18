@@ -1,0 +1,7 @@
+@font-face {
+    font-family: "Prumo";
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: optional;
+    src: url(./fonts/Prumo-LNVF.woff2) format("woff2");
+  }

@@ -1,0 +1,11 @@
+{
+  "manifest_version":3,
+  "name":"La Nación",
+  "version": "1.0.0",
+  "description": "Newtab Chrome Extension",
+
+  "chrome_url_overrides": {
+      "newtab": "index.html"
+    },
+    "permissions": ["topSites", "favicon", "geolocation","storage"]
+}

@@ -1,4 +1,5 @@
 /*global chrome*/
+
 import "./App.css";
 import { useState, useEffect } from "react";
 import Nav from "./components/Nav/Nav";
@@ -7,8 +8,7 @@ import MostVisited from "./components/MostVisited/MostVisited";
 import WeatherCard from "./components/WeatherCard/WeatherCard";
 import Currencies from "./components/Currencies/Currencies";
 import LatestNews from "./components/LatestNews/LatestNews";
-const { parseString } = require("xml2js");
-
+// import { parseString } from "xml2js";
 const API_WEATHER = process.env.REACT_APP_WEATHER_API_KEY;
 
 function App() {
@@ -16,26 +16,37 @@ function App() {
   const [currencies, setCurrencies] = useState();
   const [latestNews, setLatestNews] = useState();
 
-  const fetchNews = async () => {
-    try {
-      const response = await fetch(
-        "https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml"
-      );
+  // const fetchNews = async () => {
+  //   const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+  //   try {
+  //     const response = await fetch(
+  //       `${CORS_PROXY}https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml`
+  //     );
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Network response was not ok");
+  //     }
 
-      const xmlText = await response.text();
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-      console.log(xmlDoc);
-      setLatestNews(xmlDoc);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const fetchInfo = (lat, long) => {
+  //     const xmlText = await response.text();
+
+  //     // Parse the XML string using xml2js
+  //     parseString(xmlText, { compact: true, spaces: 4 }, (err, result) => {
+  //       if (err) {
+  //         throw new Error("Error parsing XML");
+  //       }
+
+  //       // Access the parsed data as a JavaScript object
+  //       console.log(result);
+
+  //       // Set the parsed data in your state
+  //       setLatestNews(result); // Assuming setLatestNews is correctly defined
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+
+  const fetchInfo = (lat, long, currentTime) => {
     fetch(
       `https://api.weatherapi.com/v1/forecast.json?key=${API_WEATHER}&q=${lat},${long}&lang=es&days=1`
     )
@@ -62,7 +73,7 @@ function App() {
       })
       .catch((error) => console.log(error));
 
-    fetchNews();
+    // fetchNews();
   };
 
   useEffect(() => {
@@ -80,7 +91,7 @@ function App() {
           var longitude = position.coords.longitude;
 
           if (latitude && longitude) {
-            fetchInfo(latitude, longitude);
+            fetchInfo(latitude, longitude, currentTime);
             // fetch(
             //   `https://api.weatherapi.com/v1/forecast.json?key=${API_WEATHER}&q=${latitude},${longitude}&lang=es&days=1`
             // )
@@ -109,14 +120,14 @@ function App() {
             //   })
             //   .catch((error) => console.log(error));
           } else {
-            fetchInfo(-34.586624, -58.4482816);
+            fetchInfo(-34.586624, -58.4482816, currentTime);
           }
         });
       } else {
         // console.log("myData:", result.myData);
         setWeather(result.myData.weather);
         setCurrencies(result.myData.currencies);
-        fetchNews();
+        // fetchNews();
       }
       // const fetchNews = async () => {
       //   try {
@@ -168,7 +179,7 @@ function App() {
           {weather && <WeatherCard weather={weather} />}
           {currencies && <Currencies currencies={currencies} />}
         </div>
-        <LatestNews latestNews={latestNews} />
+        {/* <LatestNews latestNews={latestNews} /> */}
       </div>
     </>
   );

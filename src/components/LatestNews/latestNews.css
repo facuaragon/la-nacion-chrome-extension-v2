@@ -45,7 +45,10 @@
     box-sizing: border-box;
     width: 50%;
 }
+.first-news-title .latest-description, .second-news p .latest-description, .third-news p .latest-description{
+    font-weight: 900;
 
+}
 .first-news-title span, .second-news p span, .third-news p span{
     font-weight: 400;
 
@@ -67,5 +70,4 @@
     height: 178px;
     background-size: cover;
 }
-
 

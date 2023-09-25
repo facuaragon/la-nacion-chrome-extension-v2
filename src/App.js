@@ -8,180 +8,228 @@ import MostVisited from "./components/MostVisited/MostVisited";
 import WeatherCard from "./components/WeatherCard/WeatherCard";
 import Currencies from "./components/Currencies/Currencies";
 import LatestNews from "./components/LatestNews/LatestNews";
+
+import LnLoader from "./components/LN_Loader/LnLoader";
 // import { parseString } from "xml2js";
 const API_WEATHER = process.env.REACT_APP_WEATHER_API_KEY;
+const DEFAULT_LATITUDE = -34.586624;
+const DEFAULT_LONGITUDE = -58.4482816;
 
 function App() {
   const [weather, setWeather] = useState();
   const [currencies, setCurrencies] = useState();
   const [latestNews, setLatestNews] = useState();
 
-  // const fetchNews = async () => {
-  //   const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
-  //   try {
-  //     const response = await fetch(
-  //       `${CORS_PROXY}https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml`
-  //     );
+  const fetchWeather = async (lat, long) => {
+    try {
+      const response = await fetch(
+        `https://api.weatherapi.com/v1/forecast.json?key=${API_WEATHER}&q=${lat},${long}&lang=es&days=1`
+      );
+      const weatherData = await response.json();
+      return weatherData;
+    } catch (error) {
+      console.error("Error fetching weather data: ", error);
+      return null;
+    }
+  };
+  const fetchCurrencies = async () => {
+    try {
+      const response = await fetch(
+        "https://especialess3.lanacion.com.ar/monitor-economia-real/data/cotizaciones_dolar_dia.json"
+      );
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching currency data: ", error);
+      return null;
+    }
+  };
 
-  //     if (!response.ok) {
-  //       throw new Error("Network response was not ok");
-  //     }
+  const fetchNews = async () => {
+    try {
+      const [economiaResponse, politicaResponse, espectaculosResponse] =
+        await Promise.all([
+          fetch(
+            "https://www.lanacion.com.ar/api/v1/notas/bySection/economia/params=size:50;page:1/?_website=la-nacion-ar&outputType=json"
+          ),
+          fetch(
+            "https://www.lanacion.com.ar/api/v1/notas/bySection/politica/params=size:50;page:1/?_website=la-nacion-ar&outputType=json"
+          ),
+          fetch(
+            "https://www.lanacion.com.ar/api/v1/notas/bySection/espectaculos/params=size:50;page:1/?_website=la-nacion-ar&outputType=json"
+          ),
+        ]);
 
-  //     const xmlText = await response.text();
+      const [economiaData, politicaData, espectaculosData] = await Promise.all([
+        economiaResponse.json(),
+        politicaResponse.json(),
+        espectaculosResponse.json(),
+      ]);
 
-  //     // Parse the XML string using xml2js
-  //     parseString(xmlText, { compact: true, spaces: 4 }, (err, result) => {
-  //       if (err) {
-  //         throw new Error("Error parsing XML");
-  //       }
+      const updatedNews = {
+        economia: economiaData.notas[0],
+        politica: politicaData.notas[0],
+        espectaculos: espectaculosData.notas[0],
+      };
 
-  //       // Access the parsed data as a JavaScript object
-  //       console.log(result);
-
-  //       // Set the parsed data in your state
-  //       setLatestNews(result); // Assuming setLatestNews is correctly defined
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
-
-  const fetchInfo = (lat, long, currentTime) => {
-    fetch(
-      `https://api.weatherapi.com/v1/forecast.json?key=${API_WEATHER}&q=${lat},${long}&lang=es&days=1`
-    )
-      .then((response) => response.json())
-      .then((weatherData) => {
-        setWeather(weatherData);
-        fetch(
-          "https://especialess3.lanacion.com.ar/monitor-economia-real/data/cotizaciones_dolar_dia.json"
-        )
-          .then((response) => response.json())
-          .then((currenciesData) => {
-            setCurrencies(currenciesData);
-            const expirationTime = currentTime + 900000; // 15 minutes in milisegundos
-
-            chrome.storage?.local.set({
-              myData: {
-                weather: weatherData,
-                currencies: currenciesData,
-              },
-              expirationTime: expirationTime,
-            });
-          })
-          .catch((error) => console.log(error));
-      })
-      .catch((error) => console.log(error));
-
-    // fetchNews();
+      return updatedNews;
+    } catch (error) {
+      console.error("Error fetching news data: ", error);
+      return null;
+    }
   };
 
   useEffect(() => {
+    // Check local storage for existing data
     chrome.storage?.local.get(["myData", "expirationTime"], (result) => {
       const currentTime = Date.now();
-      // console.log(result.myData);
       if (
-        !result.myData?.weather ||
-        !result.myData?.currencies ||
-        result.myData?.weather.error ||
-        currentTime > result.expirationTime
+        result.myData &&
+        result.myData.weather &&
+        result.myData.currencies &&
+        result.myData.latestNews &&
+        currentTime <= result.expirationTime
       ) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          var latitude = position.coords.latitude;
-          var longitude = position.coords.longitude;
-
-          if (latitude && longitude) {
-            fetchInfo(latitude, longitude, currentTime);
-            // fetch(
-            //   `https://api.weatherapi.com/v1/forecast.json?key=${API_WEATHER}&q=${latitude},${longitude}&lang=es&days=1`
-            // )
-            //   .then((response) => response.json())
-            //   .then((weatherData) => {
-            //     setWeather(weatherData); // Update the state with weather data
-            //     fetch(
-            //       "https://especialess3.lanacion.com.ar/monitor-economia-real/data/cotizaciones_dolar_dia.json"
-            //     )
-            //       .then((response) => response.json())
-            //       .then((currenciesData) => {
-            //         setCurrencies(currenciesData); // Update the state with currencies data
-            //         const expirationTime = currentTime + 900000; // 15 minutos en milisegundos
-            //         // const expirationTime = currentTime + 10; // 15 minutos en milisegundos
-            //         chrome.storage?.local.set({
-            //           myData: {
-            //             weather: weatherData,
-            //             currencies: currenciesData,
-            //           },
-            //           expirationTime: expirationTime,
-            //         });
-            //         // console.log("weather: ", weatherData);
-            //         // console.log("currencies: ", currenciesData);
-            //       })
-            //       .catch((error) => console.log(error));
-            //   })
-            //   .catch((error) => console.log(error));
-          } else {
-            fetchInfo(-34.586624, -58.4482816, currentTime);
-          }
-        });
-      } else {
-        // console.log("myData:", result.myData);
+        // Data exists in local storage and is not expired
         setWeather(result.myData.weather);
         setCurrencies(result.myData.currencies);
-        // fetchNews();
+        setLatestNews(result.myData.latestNews);
+      } else {
+        // Data not found in local storage or is expired
+        Promise.all([
+          new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve(position);
+              },
+              (error) => {
+                console.error("Error getting geolocation: ", error);
+                resolve(null);
+              }
+            );
+          }),
+          fetchCurrencies(),
+          fetchNews(),
+        ]).then(([geolocation, currencyData, newsData]) => {
+          if (geolocation !== null) {
+            const { latitude, longitude } = geolocation.coords;
+            fetchWeather(latitude, longitude).then((weatherData) => {
+              setWeather(weatherData);
+              const expirationTime = currentTime + 900000; // 15 minutes
+              chrome.storage?.local.set({
+                myData: {
+                  weather: weatherData,
+                  currencies: currencyData,
+                  latestNews: newsData,
+                },
+                expirationTime: expirationTime,
+              });
+              setCurrencies(currencyData);
+              setLatestNews(newsData);
+            });
+          } else {
+            // Handle the case where geolocation is not available (shows Buenos Aires)
+            fetchWeather(DEFAULT_LATITUDE, DEFAULT_LONGITUDE).then(
+              (weatherData) => {
+                setWeather(weatherData);
+                const expirationTime = currentTime + 900000; // 15 minutes
+                chrome.storage?.local.set({
+                  myData: {
+                    weather: weatherData,
+                    currencies: currencyData,
+                    latestNews: newsData,
+                  },
+                  expirationTime: expirationTime,
+                });
+                setCurrencies(currencyData);
+                setLatestNews(newsData);
+              }
+            );
+          }
+        });
       }
-      // const fetchNews = async () => {
-      //   try {
-      //     const response = await fetch(
-      //       "https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml"
-      //     );
-
-      //     if (!response.ok) {
-      //       throw new Error("Network response was not ok");
-      //     }
-
-      //     const xmlText = await response.text();
-      //     const parser = new DOMParser();
-      //     const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-      //     console.log(xmlDoc);
-      //   } catch (error) {
-      //     console.error(error);
-      //   }
-      // };
-
-      // fetchNews();
+      console.log(result.myData);
     });
   }, []);
-
   return (
-    <>
-      <Nav />
-      <SearchBar />
-      <MostVisited />
+    <div
+      style={{
+        height: "100vh",
+        width: "100vw",
+      }}
+    >
       <div
         style={{
-          width: "1032px",
-          height: "565px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          margin: "0px auto",
+          alignSelf: "flex-start",
+          height: "8.36%",
+          width: "100%",
+          maxHeight: "77px",
         }}
       >
-        <div
-          style={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            marginRight: "19px",
-          }}
-        >
-          {weather && <WeatherCard weather={weather} />}
-          {currencies && <Currencies currencies={currencies} />}
-        </div>
-        {/* <LatestNews latestNews={latestNews} /> */}
+        <Nav />
       </div>
-    </>
+      <div
+        style={{
+          height: "91.64%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-evenly",
+          alignItems: "center",
+        }}
+      >
+        <div className="searchMost">
+          <SearchBar />
+          <MostVisited />
+        </div>
+        {!(weather || currencies || latestNews) ? (
+          <LnLoader />
+        ) : (
+          <div
+            className="showingCards"
+            style={{
+              width: "1032px",
+              minWidth: "1032px",
+              minHeight: "565px",
+              height: "565px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              margin: "0px auto",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                marginRight: "19px",
+              }}
+            >
+              {weather && <WeatherCard weather={weather} />}
+              {currencies && <Currencies currencies={currencies} />}
+            </div>
+            {latestNews ? (
+              <LatestNews latestNews={latestNews} />
+            ) : (
+              <div
+                style={{
+                  minWidth: "724px",
+                  minHeight: "565px",
+                  border: "1px solid #D9D9D9",
+                  borderRadius: "12px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <LnLoader />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

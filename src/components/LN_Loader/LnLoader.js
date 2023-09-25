@@ -2,7 +2,7 @@ import "./ln_Loader.css";
 import React, { useEffect } from "react";
 import { Spinner } from "spin.js";
 
-const LN_Loader = () => {
+const LnLoader = () => {
   useEffect(() => {
     var opts = {
       lines: 40,
@@ -37,4 +37,4 @@ const LN_Loader = () => {
   );
 };
 
-export default LN_Loader;
+export default LnLoader;

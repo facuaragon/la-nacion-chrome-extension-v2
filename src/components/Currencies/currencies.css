@@ -24,7 +24,7 @@
 .currency-exchange2{
     line-height: 95.88px;
     font-size: 79.9px;
-    font-family: 'Prumo';
+    font-family: 'Prumo' !important;
     color: #006737;
 }
 

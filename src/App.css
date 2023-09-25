@@ -2,6 +2,25 @@
     font-family: "Prumo";
     font-style: normal;
     font-weight: 400 900;
-    font-display: optional;
+    font-display: auto;
     src: url(./fonts/Prumo-LNVF.woff2) format("woff2");
+  }
+
+
+
+
+  @media screen and (max-height: 720px) {
+    .showingCards,.searchMost{
+      transform: scale(0.9)
+    }
+    .searchMost{
+      margin-top: 20px;
+    }
+  }
+
+  @media screen and (max-height: 685px) {
+
+    .searchMost{
+      margin-top: 40px;
+    }
   }
